@@ -13,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.times;
 import org.mockito.internal.util.reflection.Whitebox;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
@@ -83,6 +84,33 @@ public class NewsLoaderTest {
 
     }
 
-    
+    @Test
+    public void loadNews_expectedReadCallOneTime() {
+        //*******prepare IncomingNews
+        IncomingNews news = new IncomingNews();
+
+        //*******prepare Configuration
+        Configuration configuration = mock( Configuration.class );
+        when( configuration.getReaderType() ).thenReturn( "WS" );
+
+        //*******prepare ConfigurationLoader
+        mockStatic( ConfigurationLoader.class );
+        ConfigurationLoader cfgLoader = mock( ConfigurationLoader.class );
+        when( ConfigurationLoader.getInstance() ).thenReturn( cfgLoader );
+        when( cfgLoader.loadConfiguration() ).thenReturn( configuration );
+
+        //*******prepare WebServiceNewsReader
+        NewsReader reader = mock( WebServiceNewsReader.class );
+        when( reader.read() ).thenReturn( news );
+
+        //*******prepare NewsReaderFactory
+        mockStatic( NewsReaderFactory.class );
+        when( NewsReaderFactory.getReader( (String) Mockito.any() ) ).thenReturn( reader );
+
+        NewsLoader newsLoader = new NewsLoader();
+        newsLoader.loadNews();
+
+        Mockito.verify( reader, times( 1 ) ).read();
+    }
 
 }
